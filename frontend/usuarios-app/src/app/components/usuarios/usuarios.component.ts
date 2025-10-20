@@ -11,6 +11,7 @@ export class UsuariosComponent implements OnInit {
   loading = false;
   error = '';
   mostrarForm = false;
+  mostrarUpload = false;
   usuarioEditar: any = null;
 
   constructor(private usuarioService: UsuarioService) { }
@@ -37,6 +38,7 @@ export class UsuariosComponent implements OnInit {
 
   abrirFormulario(): void {
     this.mostrarForm = true;
+    this.mostrarUpload = false;
     this.usuarioEditar = null;
   }
 
@@ -45,9 +47,19 @@ export class UsuariosComponent implements OnInit {
     this.usuarioEditar = null;
   }
 
+  abrirUploadExcel(): void {
+    this.mostrarUpload = true;
+    this.mostrarForm = false;
+  }
+
+  cerrarUploadExcel(): void {
+    this.mostrarUpload = false;
+  }
+
   editar(usuario: any): void {
     this.usuarioEditar = { ...usuario };
     this.mostrarForm = true;
+    this.mostrarUpload = false;
   }
 
   eliminar(id: number): void {
@@ -67,5 +79,10 @@ export class UsuariosComponent implements OnInit {
   usuarioGuardado(): void {
     this.cargarUsuarios();
     this.cerrarFormulario();
+  }
+
+  usuariosSubidos(): void {
+    this.cargarUsuarios();
+    this.cerrarUploadExcel();
   }
 }

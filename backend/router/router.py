@@ -194,7 +194,7 @@ async def upload_excel(file: UploadFile = File(...)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error en el servidor: {str(e)}")
     
-    
+
 
 
 @user.get("/api/user/template/excel")

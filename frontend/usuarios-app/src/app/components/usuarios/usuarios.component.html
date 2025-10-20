@@ -2,17 +2,29 @@
 
 <div class="container mt-4">
   <div class="row mb-4">
-    <div class="col-md-8">
+    <div class="col-md-6">
       <h2>Gestión de Usuarios</h2>
     </div>
-    <div class="col-md-4 text-end">
-      <button class="btn btn-success" (click)="abrirFormulario()" *ngIf="!mostrarForm">
+    <div class="col-md-6 text-end">
+      <button class="btn btn-info me-2" (click)="abrirUploadExcel()" *ngIf="!mostrarForm && !mostrarUpload">
+        📊 Cargar Excel
+      </button>
+      <button class="btn btn-success" (click)="abrirFormulario()" *ngIf="!mostrarForm && !mostrarUpload">
         + Nuevo Usuario
       </button>
     </div>
   </div>
 
   <div *ngIf="error" class="alert alert-danger">{{ error }}</div>
+
+  <div *ngIf="mostrarUpload" class="card mb-4">
+    <div class="card-body">
+      <app-upload-excel 
+        (cerrar)="cerrarUploadExcel()"
+        (guardado)="usuariosSubidos()">
+      </app-upload-excel>
+    </div>
+  </div>
 
   <div *ngIf="mostrarForm" class="card mb-4">
     <div class="card-body">

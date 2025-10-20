@@ -9,6 +9,7 @@ import { LoginComponent } from './components/login/login.component';
 import { UsuariosComponent } from './components/usuarios/usuarios.component';
 import { NavbarComponent } from './components/navbar/navbar.component';
 import { UsuarioFormComponent } from './components/usuario-form/usuario-form.component';
+import { UploadExcelComponent } from './components/upload-excel/upload-excel.component';
 
 @NgModule({
   declarations: [
@@ -16,7 +17,8 @@ import { UsuarioFormComponent } from './components/usuario-form/usuario-form.com
     LoginComponent,
     UsuariosComponent,
     NavbarComponent,
-    UsuarioFormComponent
+    UsuarioFormComponent,
+    UploadExcelComponent
   ],
   imports: [
     BrowserModule,

@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, Output, EventEmitter } from '@angular/core';
 import { UsuarioService } from '../../services/usuario.service';
 
 @Component({
@@ -7,6 +7,9 @@ import { UsuarioService } from '../../services/usuario.service';
   styleUrls: ['./upload-excel.component.css']
 })
 export class UploadExcelComponent {
+  @Output() cerrar = new EventEmitter<void>();
+  @Output() guardado = new EventEmitter<void>();
+
   selectedFile: File | null = null;
   loading = false;
   mensaje = '';
@@ -16,7 +19,18 @@ export class UploadExcelComponent {
   constructor(private usuarioService: UsuarioService) { }
 
   onFileSelected(event: any): void {
-    this.selectedFile = event.target.files[0];
+    const file = event.target.files[0];
+    if (file) {
+      const extension = file.name.split('.').pop()?.toLowerCase();
+      if (extension === 'xlsx' || extension === 'xls') {
+        this.selectedFile = file;
+        this.mensaje = '';
+      } else {
+        this.mensaje = 'Solo se permiten archivos .xlsx o .xls';
+        this.tipoMensaje = 'danger';
+        this.selectedFile = null;
+      }
+    }
   }
 
   subirArchivo(): void {
@@ -28,21 +42,28 @@ export class UploadExcelComponent {
 
     this.loading = true;
     this.mensaje = '';
+    this.resultado = null;
 
     const formData = new FormData();
     formData.append('file', this.selectedFile);
 
-    // Necesitas agregar este método en UsuarioService
     this.usuarioService.subirExcel(formData).subscribe(
       (response) => {
         this.resultado = response;
-        this.mensaje = 'Carga completada exitosamente';
+        this.mensaje = response.mensaje || 'Carga completada exitosamente';
         this.tipoMensaje = 'success';
         this.selectedFile = null;
         this.loading = false;
+        
+        // Resetear el input de archivo
+        const fileInput = document.getElementById('archivo') as HTMLInputElement;
+        if (fileInput) {
+          fileInput.value = '';
+        }
       },
       (error) => {
-        this.mensaje = error.error.detail || 'Error al subir el archivo';
+        console.error('Error:', error);
+        this.mensaje = error.error?.detail || 'Error al subir el archivo';
         this.tipoMensaje = 'danger';
         this.loading = false;
       }
@@ -51,17 +72,28 @@ export class UploadExcelComponent {
 
   descargarPlantilla(): void {
     this.usuarioService.descargarPlantilla().subscribe(
-      (response: any) => {
+      (response: Blob) => {
         const url = window.URL.createObjectURL(response);
         const a = document.createElement('a');
         a.href = url;
         a.download = 'plantilla_usuarios.xlsx';
+        document.body.appendChild(a);
         a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
       },
       (error) => {
         this.mensaje = 'Error al descargar la plantilla';
         this.tipoMensaje = 'danger';
       }
     );
+  }
+
+  cancelar(): void {
+    this.cerrar.emit();
+  }
+
+  finalizar(): void {
+    this.guardado.emit();
   }
 }

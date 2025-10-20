@@ -1,65 +1,103 @@
-<div class="container mt-5">
-  <div class="row">
-    <div class="col-md-8 offset-md-2">
-      <div class="card">
-        <div class="card-header bg-primary text-white">
-          <h4 class="mb-0">Carga Masiva de Usuarios</h4>
-        </div>
-        <div class="card-body">
-          <div *ngIf="mensaje" [ngClass]="'alert alert-' + tipoMensaje">
-            {{ mensaje }}
-          </div>
+<div class="upload-container">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0">Carga Masiva de Usuarios</h4>
+    <button type="button" class="btn-close" (click)="cancelar()"></button>
+  </div>
 
-          <div class="mb-3">
-            <p class="text-muted">Descarga la plantilla, llénala con tus datos y sube el archivo.</p>
-            <button class="btn btn-secondary mb-3" (click)="descargarPlantilla()">
-              📥 Descargar Plantilla
-            </button>
-          </div>
+  <div *ngIf="mensaje" [ngClass]="'alert alert-' + tipoMensaje + ' alert-dismissible fade show'" role="alert">
+    {{ mensaje }}
+    <button type="button" class="btn-close" (click)="mensaje = ''" aria-label="Close"></button>
+  </div>
 
-          <div class="mb-3">
-            <label for="archivo" class="form-label">Selecciona archivo Excel:</label>
-            <input 
-              type="file" 
-              class="form-control" 
-              id="archivo"
-              accept=".xlsx,.xls"
-              (change)="onFileSelected($event)">
-          </div>
+  <div class="info-section mb-4">
+    <div class="alert alert-info">
+      <strong>ℹ️ Instrucciones:</strong>
+      <ol class="mb-0 mt-2">
+        <li>Descarga la plantilla de Excel</li>
+        <li>Completa los datos de los usuarios (nombre, username, correo, user_passw)</li>
+        <li>Guarda el archivo y súbelo aquí</li>
+      </ol>
+    </div>
+  </div>
 
-          <button 
-            class="btn btn-primary w-100" 
-            (click)="subirArchivo()"
-            [disabled]="loading || !selectedFile">
-            {{ loading ? 'Subiendo...' : 'Subir Archivo' }}
-          </button>
+  <div class="download-section mb-4">
+    <button class="btn btn-secondary w-100" (click)="descargarPlantilla()">
+      📥 Descargar Plantilla Excel
+    </button>
+  </div>
 
-          <div *ngIf="resultado" class="mt-4">
-            <h5>Resumen:</h5>
-            <table class="table table-sm">
-              <tr>
-                <td><strong>Usuarios creados:</strong></td>
-                <td>{{ resultado.usuarios_creados }}</td>
-              </tr>
-              <tr>
-                <td><strong>Usuarios duplicados:</strong></td>
-                <td>{{ resultado.usuarios_duplicados }}</td>
-              </tr>
-              <tr>
-                <td><strong>Total procesados:</strong></td>
-                <td>{{ resultado.total_filas_procesadas }}</td>
-              </tr>
-            </table>
+  <hr class="my-4">
 
-            <div *ngIf="resultado.errores.length > 0">
-              <h6 class="text-danger">Errores encontrados:</h6>
-              <ul class="list-group">
-                <li class="list-group-item text-danger" *ngFor="let error of resultado.errores">
-                  {{ error }}
-                </li>
-              </ul>
+  <div class="upload-section">
+    <div class="mb-3">
+      <label for="archivo" class="form-label fw-bold">Selecciona el archivo Excel:</label>
+      <input 
+        type="file" 
+        class="form-control" 
+        id="archivo"
+        accept=".xlsx,.xls"
+        (change)="onFileSelected($event)">
+      <small class="text-muted">Formatos permitidos: .xlsx, .xls</small>
+    </div>
+
+    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+      <button 
+        type="button" 
+        class="btn btn-secondary" 
+        (click)="cancelar()">
+        Cancelar
+      </button>
+      <button 
+        type="button"
+        class="btn btn-primary" 
+        (click)="subirArchivo()"
+        [disabled]="loading || !selectedFile">
+        <span *ngIf="loading" class="spinner-border spinner-border-sm me-2"></span>
+        {{ loading ? 'Subiendo...' : 'Subir Archivo' }}
+      </button>
+    </div>
+  </div>
+
+  <div *ngIf="resultado" class="result-section mt-4">
+    <div class="card">
+      <div class="card-header bg-success text-white">
+        <h5 class="mb-0">✅ Resumen de Carga</h5>
+      </div>
+      <div class="card-body">
+        <div class="row text-center mb-3">
+          <div class="col-md-4">
+            <div class="stat-box success">
+              <h3 class="text-success">{{ resultado.usuarios_creados }}</h3>
+              <p class="mb-0">Usuarios Creados</p>
             </div>
           </div>
+          <div class="col-md-4">
+            <div class="stat-box warning">
+              <h3 class="text-warning">{{ resultado.usuarios_duplicados }}</h3>
+              <p class="mb-0">Duplicados</p>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="stat-box info">
+              <h3 class="text-primary">{{ resultado.total_filas_procesadas }}</h3>
+              <p class="mb-0">Total Procesados</p>
+            </div>
+          </div>
+        </div>
+
+        <div *ngIf="resultado.errores && resultado.errores.length > 0" class="mt-3">
+          <h6 class="text-danger">⚠️ Errores encontrados:</h6>
+          <ul class="list-group">
+            <li class="list-group-item list-group-item-danger" *ngFor="let error of resultado.errores">
+              {{ error }}
+            </li>
+          </ul>
+        </div>
+
+        <div class="mt-3 text-end">
+          <button class="btn btn-success" (click)="finalizar()">
+            Finalizar y Actualizar Lista
+          </button>
         </div>
       </div>
     </div>
