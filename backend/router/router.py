@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Response
+from fastapi import APIRouter, Response, HTTPException
 from starlette.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT
 from schema.user_schema import UserSchema, DataUser
 from config.db import engine
@@ -61,25 +61,36 @@ def user_login(data_user: DataUser):
 
 
 
-@user.put("/api/user/{user_id}", response_model=UserSchema)
+@user.put("/api/user/{user_id}")
 def update_user(data_update: UserSchema, user_id: str):
-  with engine.connect() as conn:
-    encrypt_passw = generate_password_hash(data_update.user_passw, "pbkdf2:sha256:30", 30)
-    conn.execute(users.update().values(nombre=data_update.nombre, username=data_update.username, correo=data_update.correo, user_passw=encrypt_passw).where(users.c.id == user_id))
-    conn.commit()
-    result = conn.execute(users.select().where(users.c.id == user_id)).first()
-    if result:
-            # Convertir manualmente a diccionario
-            user_dict = {
-                "id": result.id,
-                "nombre": result.nombre,
-                "username": result.username,
-                "correo": result.correo
-                # No devolver la contraseña por seguridad
-            }
-            return user_dict
-    else:
-            raise HTTPException(status_code=404, detail="Usuario no encontrado después de actualizar")
+    try:
+        with engine.connect() as conn:
+            # Convertir user_id a entero
+            user_id_int = int(user_id)
+            
+            encrypt_passw = generate_password_hash(data_update.user_passw, "pbkdf2:sha256:30", 30)
+            conn.execute(users.update().values(
+                nombre=data_update.nombre, 
+                username=data_update.username, 
+                correo=data_update.correo, 
+                user_passw=encrypt_passw
+            ).where(users.c.id == user_id_int))
+            conn.commit()
+            
+            result = conn.execute(users.select().where(users.c.id == user_id_int)).first()
+            if result:
+                user_dict = {
+                    "id": result.id,
+                    "nombre": result.nombre,
+                    "username": result.username,
+                    "correo": result.correo
+                }
+                return user_dict
+            else:
+                raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    except Exception as e:
+        print(f"Error en update_user: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error al actualizar: {str(e)}")
             
 
 

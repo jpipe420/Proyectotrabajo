@@ -21,13 +21,20 @@ export class UsuarioFormComponent implements OnInit {
   error = '';
   loading = false;
   esEdicion = false;
+  usuarioId: any = null;
 
   constructor(private usuarioService: UsuarioService) { }
 
   ngOnInit(): void {
     if (this.usuario) {
       this.esEdicion = true;
-      this.form = { ...this.usuario };
+      this.usuarioId = this.usuario.id;
+      this.form = {
+        nombre: this.usuario.nombre || '',
+        username: this.usuario.username || '',
+        correo: this.usuario.correo || '',
+        user_passw: this.usuario.user_passw || ''
+      };
     }
   }
 
@@ -42,26 +49,28 @@ export class UsuarioFormComponent implements OnInit {
     this.loading = true;
 
     if (this.esEdicion) {
-      this.usuarioService.actualizarUsuario(this.usuario.id, this.form).subscribe(
-        () => {
+      this.usuarioService.actualizarUsuario(this.usuarioId, this.form).subscribe(
+        (response) => {
+          console.log('Respuesta del servidor:', response);
           this.loading = false;
           this.guardado.emit();
         },
         (error) => {
-          this.error = 'Error al actualizar el usuario';
-          console.error(error);
+          console.error('Error completo:', error);
+          this.error = 'Error al actualizar el usuario: ' + (error.error?.detail || error.message || 'Error desconocido');
           this.loading = false;
         }
       );
     } else {
       this.usuarioService.crearUsuario(this.form).subscribe(
-        () => {
+        (response) => {
+          console.log('Usuario creado:', response);
           this.loading = false;
           this.guardado.emit();
         },
         (error) => {
-          this.error = 'Error al crear el usuario';
-          console.error(error);
+          console.error('Error al crear:', error);
+          this.error = 'Error al crear el usuario: ' + (error.error?.detail || error.message || 'Error desconocido');
           this.loading = false;
         }
       );

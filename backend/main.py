@@ -4,12 +4,17 @@ from router.router import user
 
 app = FastAPI()
 
+# Configurar CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:4200"],
+    allow_origins=["http://localhost:4200", "http://127.0.0.1:4200"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 app.include_router(user)
+
+@app.get("/")
+def root():
+    return {"message": "API funcionando"}
