@@ -1,0 +1,22 @@
+/venv/
+__pycache__
+# Dependencias de Node/NPM (Back-end y Front-end)
+/node_modules
+
+# Archivos de caché del SO
+.DS_Store
+Thumbs.db
+
+# Logs y cachés
+npm-debug.log*
+yarn-error.log*
+.vscode/
+
+# Archivos de compilación de Front-end (ej. Angular, React)
+/frontend/dist 
+/frontend/build 
+/frontend/.angular/cache
+
+# Archivos sensibles del Back-end (ej. variables de entorno)
+/backend/.env 
+/backend/*.sqlite

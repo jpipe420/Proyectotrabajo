@@ -1,0 +1,23 @@
+.card {
+  border: none;
+  margin-top: 50px;
+}
+
+.card-header {
+  border-radius: 5px 5px 0 0;
+}
+
+.form-group label {
+  font-weight: 500;
+  color: #333;
+}
+
+.btn-primary {
+  padding: 10px;
+  font-weight: 500;
+}
+
+.btn-primary:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
