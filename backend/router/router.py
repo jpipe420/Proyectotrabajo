@@ -1,10 +1,13 @@
-from fastapi import APIRouter, Response, HTTPException
+from fastapi import APIRouter, Response, HTTPException, UploadFile, File
 from starlette.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT
 from schema.user_schema import UserSchema, DataUser
 from config.db import engine
 from model.users import users
 from werkzeug.security import generate_password_hash, check_password_hash
 from typing import List
+from utils.excel_loader import ExcelLoader
+import tempfile
+import os
 
 
 user = APIRouter()
@@ -100,3 +103,130 @@ def delete_user(user_id: str):
     conn.execute(users.delete().where(users.c.id == user_id))
     conn.commit()
     return Response(status_code=HTTP_204_NO_CONTENT)
+
+
+@user.post("/api/user/upload/excel")
+async def upload_excel(file: UploadFile = File(...)):
+    """
+    Endpoint para cargar usuarios masivamente desde Excel
+    Acepta archivos .xlsx y .xls
+    """
+    try:
+        # Validar tipo de archivo
+        if not ExcelLoader.allowed_file(file.filename):
+            raise HTTPException(
+                status_code=400, 
+                detail="Solo se permiten archivos .xlsx o .xls"
+            )
+        
+        # Guardar archivo temporalmente
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.xlsx') as temp_file:
+            contents = await file.read()
+            temp_file.write(contents)
+            temp_file_path = temp_file.name
+        
+        try:
+            # Leer y validar el Excel
+            es_valido, datos, mensaje = ExcelLoader.read_excel(temp_file_path)
+            
+            if not es_valido:
+                raise HTTPException(status_code=400, detail=mensaje)
+            
+            # Procesar los datos
+            usuarios_creados = 0
+            usuarios_duplicados = 0
+            errores = []
+            
+            with engine.connect() as conn:
+                for idx, usuario_data in enumerate(datos, 1):
+                    try:
+                        # Verificar si el usuario ya existe
+                        resultado_existente = conn.execute(
+                            users.select().where(users.c.username == usuario_data['username'])
+                        ).first()
+                        
+                        if resultado_existente:
+                            usuarios_duplicados += 1
+                            errores.append(f"Fila {idx}: Usuario '{usuario_data['username']}' ya existe")
+                            continue
+                        
+                        # Encriptar contraseña
+                        password_encriptada = generate_password_hash(
+                            usuario_data['user_passw'], 
+                            "pbkdf2:sha256:30", 
+                            30
+                        )
+                        
+                        # Preparar datos para insertar
+                        nuevo_usuario = {
+                            'nombre': usuario_data['nombre'].strip(),
+                            'username': usuario_data['username'].strip(),
+                            'correo': usuario_data['correo'].strip(),
+                            'user_passw': password_encriptada
+                        }
+                        
+                        # Insertar en la base de datos
+                        conn.execute(users.insert().values(nuevo_usuario))
+                        usuarios_creados += 1
+                        
+                    except Exception as e:
+                        errores.append(f"Fila {idx}: Error - {str(e)}")
+                
+                # Confirmar cambios
+                conn.commit()
+            
+            return {
+                "exito": True,
+                "mensaje": f"Carga completada",
+                "usuarios_creados": usuarios_creados,
+                "usuarios_duplicados": usuarios_duplicados,
+                "errores": errores,
+                "total_filas_procesadas": len(datos)
+            }
+            
+        finally:
+            # Limpiar archivo temporal
+            if os.path.exists(temp_file_path):
+                os.remove(temp_file_path)
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error en el servidor: {str(e)}")
+    
+    
+
+
+@user.get("/api/user/template/excel")
+async def descargar_template():
+    """
+    Endpoint para descargar la plantilla de Excel
+    """
+    from fastapi.responses import FileResponse
+    import pandas as pd
+    import tempfile
+    
+    try:
+        # Crear datos de ejemplo
+        datos_ejemplo = {
+            'nombre': ['Juan Pérez', 'María García'],
+            'username': ['juanperez', 'mariagarcia'],
+            'correo': ['juan@gmail.com', 'maria@gmail.com'],
+            'user_passw': ['password123', 'password456']
+        }
+        
+        df = pd.DataFrame(datos_ejemplo)
+        
+        # Crear archivo temporal
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.xlsx') as temp_file:
+            df.to_excel(temp_file.name, index=False, sheet_name='Usuarios')
+            temp_file_path = temp_file.name
+        
+        return FileResponse(
+            temp_file_path,
+            media_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            filename='plantilla_usuarios.xlsx'
+        )
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")

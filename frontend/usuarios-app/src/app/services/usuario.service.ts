@@ -31,4 +31,15 @@ export class UsuarioService {
   eliminarUsuario(id: number): Observable<any> {
     return this.http.delete<any>(`${this.apiUrl}/${id}`);
   }
+
+
+  subirExcel(formData: FormData): Observable<any> {
+  return this.http.post<any>(`${this.apiUrl}/upload/excel`, formData);
+}
+
+descargarPlantilla(): Observable<Blob> {
+  return this.http.get(`${this.apiUrl}/template/excel`, {
+    responseType: 'blob'
+  });
+}
 }

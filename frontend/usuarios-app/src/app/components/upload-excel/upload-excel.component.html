@@ -1,0 +1,67 @@
+<div class="container mt-5">
+  <div class="row">
+    <div class="col-md-8 offset-md-2">
+      <div class="card">
+        <div class="card-header bg-primary text-white">
+          <h4 class="mb-0">Carga Masiva de Usuarios</h4>
+        </div>
+        <div class="card-body">
+          <div *ngIf="mensaje" [ngClass]="'alert alert-' + tipoMensaje">
+            {{ mensaje }}
+          </div>
+
+          <div class="mb-3">
+            <p class="text-muted">Descarga la plantilla, llénala con tus datos y sube el archivo.</p>
+            <button class="btn btn-secondary mb-3" (click)="descargarPlantilla()">
+              📥 Descargar Plantilla
+            </button>
+          </div>
+
+          <div class="mb-3">
+            <label for="archivo" class="form-label">Selecciona archivo Excel:</label>
+            <input 
+              type="file" 
+              class="form-control" 
+              id="archivo"
+              accept=".xlsx,.xls"
+              (change)="onFileSelected($event)">
+          </div>
+
+          <button 
+            class="btn btn-primary w-100" 
+            (click)="subirArchivo()"
+            [disabled]="loading || !selectedFile">
+            {{ loading ? 'Subiendo...' : 'Subir Archivo' }}
+          </button>
+
+          <div *ngIf="resultado" class="mt-4">
+            <h5>Resumen:</h5>
+            <table class="table table-sm">
+              <tr>
+                <td><strong>Usuarios creados:</strong></td>
+                <td>{{ resultado.usuarios_creados }}</td>
+              </tr>
+              <tr>
+                <td><strong>Usuarios duplicados:</strong></td>
+                <td>{{ resultado.usuarios_duplicados }}</td>
+              </tr>
+              <tr>
+                <td><strong>Total procesados:</strong></td>
+                <td>{{ resultado.total_filas_procesadas }}</td>
+              </tr>
+            </table>
+
+            <div *ngIf="resultado.errores.length > 0">
+              <h6 class="text-danger">Errores encontrados:</h6>
+              <ul class="list-group">
+                <li class="list-group-item text-danger" *ngFor="let error of resultado.errores">
+                  {{ error }}
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

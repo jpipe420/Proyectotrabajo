@@ -20,3 +20,5 @@ yarn-error.log*
 # Archivos sensibles del Back-end (ej. variables de entorno)
 /backend/.env 
 /backend/*.sqlite
+
+/.env/
