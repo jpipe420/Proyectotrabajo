@@ -1,12 +1,13 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class UsuarioService {
-  private apiUrl = 'http://localhost:8000/api/user';
+  private apiUrl = environment.apiUrl + '/api/user';
 
   constructor(private http: HttpClient) { }
 
@@ -32,14 +33,13 @@ export class UsuarioService {
     return this.http.delete<any>(`${this.apiUrl}/${id}`);
   }
 
-
   subirExcel(formData: FormData): Observable<any> {
-  return this.http.post<any>(`${this.apiUrl}/upload/excel`, formData);
-}
+    return this.http.post<any>(`${this.apiUrl}/upload/excel`, formData);
+  }
 
-descargarPlantilla(): Observable<Blob> {
-  return this.http.get(`${this.apiUrl}/template/excel`, {
-    responseType: 'blob'
-  });
-}
+  descargarPlantilla(): Observable<Blob> {
+    return this.http.get(`${this.apiUrl}/template/excel`, {
+      responseType: 'blob'
+    });
+  }
 }
