@@ -1,24 +1,157 @@
+# Entornos virtuales Python
 /venv/
-__pycache__
+env/
+ENV/
+venv.bak/
+
+# Cache de Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
 # Dependencias de Node/NPM (Back-end y Front-end)
 /node_modules
+node_modules/
+/frontend/node_modules
+/backend/node_modules
 
 # Archivos de caché del SO
 .DS_Store
 Thumbs.db
+*.swp
+*.swo
+*~
 
 # Logs y cachés
 npm-debug.log*
 yarn-error.log*
 .vscode/
+*.log
 
 # Archivos de compilación de Front-end (ej. Angular, React)
-/frontend/dist 
-/frontend/build 
+/frontend/dist
+/frontend/build
 /frontend/.angular/cache
+/frontend/.angular
+dist/
+build/
 
 # Archivos sensibles del Back-end (ej. variables de entorno)
-/backend/.env 
+/backend/.env
 /backend/*.sqlite
+*.sqlite3
+*.db
 
-/.env/
+# Variables de entorno
+.env
+.env.local
+.env.*.local
+*.env
+
+# Archivos de configuración de IDEs
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# Archivos de Docker
+docker-compose.override.yml
+.docker/
+
+# Archivos temporales y de prueba
+*.tmp
+*.temp
+.cache/
+coverage/
+.nyc_output/
+
+# Archivos de sistema
+*.pid
+*.seed
+*.pid.lock
+
+# Base de datos locales
+*.sqlite
+*.sqlite3
+*.db
+/backend/database.db
+
+# Certificados y claves
+*.pem
+*.key
+*.crt
+*.cer
+*.p12
+
+# Backups
+*.bak
+*.backup
+*~
+
+# TypeScript
+*.tsbuildinfo
+
+# Angular específico
+/frontend/usuarios-app/.angular/
+/frontend/usuarios-app/dist/
+/frontend/usuarios-app/tmp/
+/frontend/usuarios-app/out-tsc/
+
+# Testing
+/coverage
+/test-results
+/.nyc_output
+
+# Python específico
+*.egg
+*.egg-info/
+dist/
+build/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.manifest
+*.spec
+
+# PyInstaller
+*.spec
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# pyenv
+.python-version
+
+# Celery
+celerybeat-schedule
+celerybeat.pid
+
+# SageMath parsed files
+*.sage.py
+
+# Spyder project settings
+.spyderproject
+.spyproject
+
+# Rope project settings
+.ropeproject
+
+# mkdocs documentation
+/site
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
