@@ -48,7 +48,7 @@ def get_user(user_id: str):
 
 # ----------------------------------------------------------------------
 # NUEVO ENDPOINT DE REGISTRO (SIGN-UP)
-# Usa el esquema UserCreate para la entrada de datos.
+# CORRECCIÓN CLAVE: Mapear 'password' del Pydantic a 'user_passw' de la BD.
 # ----------------------------------------------------------------------
 @user.post(
     "/api/user/register", 
@@ -68,19 +68,23 @@ def register_user(data_user: UserCreate):
                 detail="El usuario o correo ya están registrados."
             )
 
-        # 2. Hashear la contraseña (usando el campo 'password' de UserCreate)
-        hashed_pass = generate_password_hash(data_user.password, "pbkdf2:sha256:30", 30)
+        # 2. Hashear la contraseña
+        # Obtenemos la contraseña plana del Pydantic
+        plain_password = data_user.password
+        hashed_pass = generate_password_hash(plain_password, "pbkdf2:sha256:30", 30)
 
         # 3. Preparar los datos para la inserción
-        new_user = {
-            "nombre": data_user.nombre,
-            "username": data_user.username,
-            "correo": data_user.correo,
-            "user_passw": hashed_pass # Guardamos el hash en el campo de la BD
-        }
+        # Obtenemos todos los datos del esquema
+        new_user_data = data_user.model_dump()
+        
+        # Eliminamos la clave 'password' (que no es columna de BD)
+        new_user_data.pop('password') 
 
+        # Asignamos la contraseña hasheada al nombre de columna correcto de la BD
+        new_user_data['user_passw'] = hashed_pass 
+        
         # 4. Insertar el nuevo usuario en la BD
-        result = conn.execute(users.insert().values(new_user))
+        result = conn.execute(users.insert().values(new_user_data))
         conn.commit()
 
         # 5. Obtener el registro insertado para devolver ID

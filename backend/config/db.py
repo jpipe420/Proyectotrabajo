@@ -5,7 +5,7 @@ import sys   # Necesario para terminar la aplicación si falla
 from sqlalchemy.exc import OperationalError # Importar el tipo de error específico
 
 # --- CONFIGURACIÓN DE RETRIES ---
-MAX_RETRIES = 15
+MAX_RETRIES = 60
 RETRY_DELAY = 3  # Esperar 3 segundos entre intentos
 
 # --- OBTENER VARIABLES DE ENTORNO ---

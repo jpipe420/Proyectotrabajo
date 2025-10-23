@@ -1,0 +1,192 @@
+/* -------------------------------------------------------------------------- */
+/* Contenedor Principal (Si no usa Tailwind, ajustar el ancho y centrado)      */
+/* -------------------------------------------------------------------------- */
+.product-container {
+    max-width: 1200px;
+    margin: 20px auto;
+    padding: 20px;
+    font-family: Arial, sans-serif;
+    background-color: #f8f9fa; /* Color de fondo ligero */
+    border-radius: 8px;
+}
+
+h2 {
+    color: #3730a3; /* Indigo oscuro */
+    border-bottom: 2px solid #a5b4fc; /* Línea separadora */
+    padding-bottom: 10px;
+    margin-bottom: 25px;
+}
+
+h3 {
+    color: #4b5563;
+    margin-bottom: 15px;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Formulario de Creación/Edición                                              */
+/* -------------------------------------------------------------------------- */
+.form-section {
+    background-color: #ffffff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    margin-bottom: 30px;
+}
+
+.form-section form {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+}
+
+.form-section input {
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+    transition: border-color 0.2s;
+}
+
+.form-section input:focus {
+    border-color: #4f46e5; /* Indigo para focus */
+    outline: none;
+}
+
+.form-section button {
+    cursor: pointer;
+    font-weight: bold;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 6px;
+    transition: background-color 0.2s, transform 0.1s;
+}
+
+.form-section button[type="submit"] {
+    background-color: #4f46e5; /* Indigo */
+    color: white;
+}
+
+.form-section button[type="submit"]:hover {
+    background-color: #4338ca;
+}
+
+.form-section button[type="button"] { /* Botón Cancelar */
+    background-color: #6b7280; /* Gris */
+    color: white;
+}
+.form-section button[type="button"]:hover {
+    background-color: #4b5563;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Sección de Lista y Tabla                                                  */
+/* -------------------------------------------------------------------------- */
+.list-section {
+    background-color: #ffffff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.error-message {
+    padding: 10px;
+    background-color: #fecaca;
+    color: #991b1b;
+    border: 1px solid #f87171;
+    border-radius: 4px;
+    margin-bottom: 15px;
+    font-weight: 600;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+}
+
+table thead th {
+    background-color: #eef2ff; /* Indigo muy claro */
+    color: #3730a3;
+    text-align: left;
+    padding: 10px 6px;
+    font-size: 12px;
+    text-transform: uppercase;
+    border-bottom: 2px solid #e0e7ff;
+}
+
+table tbody td {
+    padding: 12px 6px;
+    font-size: 14px;
+    border-bottom: 1px solid #f3f4f6;
+    color: #374151;
+}
+
+table tbody tr:hover {
+    background-color: #f5f3ff; /* Lila muy claro al pasar el ratón */
+}
+
+table button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 14px;
+    margin-right: 10px;
+    transition: color 0.2s;
+}
+
+table button:first-of-type { /* Botón Editar */
+    color: #4f46e5; /* Indigo */
+}
+table button:first-of-type:hover {
+    color: #312e81;
+}
+
+table button:last-of-type { /* Botón Eliminar */
+    color: #ef4444; /* Rojo */
+}
+table button:last-of-type:hover {
+    color: #b91c1c;
+}
+
+/* Estilo para pantallas pequeñas */
+@media (max-width: 768px) {
+    .product-container {
+        padding: 10px;
+    }
+    .form-section form {
+        grid-template-columns: 1fr;
+    }
+    table, thead, tbody, th, td, tr {
+display: block;
+    }
+    thead tr {
+        position: absolute;
+        top: -9999px;
+        left: -9999px;
+    }
+    /* Hace que las filas y celdas se vean como bloques apilados en móvil */
+    table tbody tr {
+        border: 1px solid #ccc;
+        margin-bottom: 10px;
+        padding: 10px;
+    }
+    table td {
+        border: none;
+        border-bottom: 1px solid #eee;
+        position: relative;
+        padding-left: 50%;
+        text-align: right;
+    }
+    /* Etiqueta visible en móvil */
+    table td:before {
+        content: attr(data-label);
+        position: absolute;
+        left: 6px;
+        width: 45%;
+        padding-right: 10px;
+        white-space: nowrap;
+        text-align: left;
+        font-weight: bold;
+    }
+}

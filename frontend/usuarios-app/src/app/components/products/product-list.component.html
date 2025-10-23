@@ -1,0 +1,82 @@
+<div class="product-container p-6 bg-gray-50 min-h-screen">
+  <h2 class="text-3xl font-extrabold text-indigo-700 mb-6 border-b pb-2">Gestión de Inventario de Productos</h2>
+
+  <!-- Sección de Formulario (Crear/Editar) -->
+  <div class="form-section bg-white p-6 rounded-lg shadow-xl mb-8">
+    <h3 class="text-xl font-semibold mb-4 text-gray-800">{{ isEditing ? 'Editar Producto (ID: ' + editingId + ')' : 'Crear Nuevo Producto' }}</h3>
+    
+    <form (ngSubmit)="submitForm()" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      
+      <input type="text" [(ngModel)]="newProduct.referencia" name="referencia" placeholder="Referencia (SKU)" required
+             class="p-2 border border-gray-300 rounded focus:ring-indigo-500 focus:border-indigo-500">
+             
+      <input type="text" [(ngModel)]="newProduct.nombre" name="nombre" placeholder="Nombre del Producto" required
+             class="p-2 border border-gray-300 rounded focus:ring-indigo-500 focus:border-indigo-500">
+
+      <input type="text" [(ngModel)]="newProduct.descripcion" name="descripcion" placeholder="Descripción breve"
+             class="p-2 border border-gray-300 rounded focus:ring-indigo-500 focus:border-indigo-500">
+
+      <input type="number" [(ngModel)]="newProduct.precio" name="precio" placeholder="Precio ($)" required
+             class="p-2 border border-gray-300 rounded focus:ring-indigo-500 focus:border-indigo-500">
+
+      <input type="number" [(ngModel)]="newProduct.stock" name="stock" placeholder="Stock Inicial" required
+             class="p-2 border border-gray-300 rounded focus:ring-indigo-500 focus:border-indigo-500">
+      
+      <div class="md:col-span-3 flex space-x-4 mt-4">
+        <button type="submit"
+                class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg transition duration-150">
+          {{ isEditing ? 'Guardar Cambios' : 'Crear Producto' }}
+        </button>
+        <button type="button" *ngIf="isEditing" (click)="resetForm()"
+                class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg transition duration-150">
+          Cancelar
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Mensaje de Error -->
+  <div *ngIf="errorMessage" class="p-4 mb-4 text-sm text-red-700 bg-red-100 rounded-lg" role="alert">
+    <span class="font-medium">¡Error de Conexión!</span> {{ errorMessage }}
+    <button (click)="loadProducts()" class="ml-4 text-indigo-700 font-semibold hover:underline">Reintentar Carga</button>
+  </div>
+
+  <!-- Sección de Lista de Productos -->
+  <div class="list-section bg-white p-6 rounded-lg shadow-xl">
+    <h3 class="text-xl font-semibold mb-4 text-gray-800">Inventario Actual ({{ products.length }} items)</h3>
+    
+    <div *ngIf="products.length > 0; else noProducts">
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-100">
+            <tr>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Referencia</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Precio</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stock</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200">
+            <tr *ngFor="let product of products" class="hover:bg-indigo-50 transition duration-150">
+<td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ product.id }}</td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ product.referencia }}</td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ product.nombre }}</td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ product.precio | currency:'USD':'symbol':'1.2-2' }}</td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ product.stock }}</td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                <button (click)="editProduct(product)" class="text-indigo-600 hover:text-indigo-900 mr-3 font-semibold">Editar</button>
+                <button (click)="deleteProduct(product.id!)" class="text-red-600 hover:text-red-900 font-semibold">Eliminar</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <ng-template #noProducts>
+      <p class="text-center text-gray-500 py-4">No hay productos registrados en el inventario. ¡Crea el primero!</p>
+    </ng-template>
+  </div>
+</div>
