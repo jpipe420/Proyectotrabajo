@@ -3,19 +3,42 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 
+// --- INTERFACES DE DATOS ---
+
+export interface RegisterData {
+  nombre: string;
+  username: string;
+  correo: string;
+  password: string; // <-- Campo 'password' para el registro
+}
+
+export interface LoginData {
+  username: string;
+  password: string; // <-- Campo 'password' para el login
+}
+// ------------------------------
+
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
-  private apiUrl = environment.apiUrl + '/api/user/Login';
+  private baseUrl = environment.apiUrl + '/api/user';
   private isLoggedIn = false;
 
   constructor(private http: HttpClient) {
     this.isLoggedIn = !!localStorage.getItem('usuario');
   }
 
-  login(username: string, user_passw: string): Observable<any> {
-    return this.http.post<any>(this.apiUrl, { username, user_passw });
+  register(data: RegisterData): Observable<any> {
+    // La URL es: http://localhost:8000/api/user/register
+    return this.http.post(`${this.baseUrl}/register`, data);
+  }
+
+  // --- FUNCIÓN LOGIN AJUSTADA ---
+  login(data: LoginData): Observable<any> {
+    // La URL es: http://localhost:8000/api/user/Login
+    // El backend de FastAPI espera {username: "...", password: "..."}
+    return this.http.post<any>(`${this.baseUrl}/Login`, data);
   }
 
   logout(): void {

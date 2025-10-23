@@ -10,6 +10,8 @@ import { UsuariosComponent } from './components/usuarios/usuarios.component';
 import { NavbarComponent } from './components/navbar/navbar.component';
 import { UsuarioFormComponent } from './components/usuario-form/usuario-form.component';
 import { UploadExcelComponent } from './components/upload-excel/upload-excel.component';
+// --- NUEVA IMPORTACIÓN ---
+import { RegisterComponent } from './components/register/register.component'; 
 
 @NgModule({
   declarations: [
@@ -18,7 +20,9 @@ import { UploadExcelComponent } from './components/upload-excel/upload-excel.com
     UsuariosComponent,
     NavbarComponent,
     UsuarioFormComponent,
-    UploadExcelComponent
+    UploadExcelComponent,
+    // --- NUEVA DECLARACIÓN ---
+    RegisterComponent 
   ],
   imports: [
     BrowserModule,

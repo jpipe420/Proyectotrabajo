@@ -5,13 +5,44 @@
       <span class="navbar-toggler-icon"></span>
     </button>
     <div class="collapse navbar-collapse" id="navbarNav">
+      
+      <!-- ENLACES PRINCIPALES (Visibles solo si está autenticado) -->
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0" *ngIf="authService.estaAutenticado()">
+        <li class="nav-item">
+            <!-- Asume que '/usuarios' es la página principal logueada -->
+            <a class="nav-link active" aria-current="page" routerLink="/usuarios">Usuarios</a>
+        </li>
+        <li class="nav-item">
+            <!-- Ruta de Excel que protegimos con AuthGuard -->
+            <a class="nav-link" routerLink="/upload-excel">Cargar Excel</a>
+        </li>
+      </ul>
+
+      <!-- BOTONES DE AUTENTICACIÓN (Login/Registro/Logout) -->
       <ul class="navbar-nav ms-auto">
-        <li class="nav-item">
-          <span class="navbar-text text-light me-3">{{ getUsuario() }}</span>
-        </li>
-        <li class="nav-item">
-          <button class="btn btn-danger btn-sm" (click)="logout()">Cerrar Sesión</button>
-        </li>
+        
+        <!-- VISIBLE CUANDO NO ESTÁ AUTENTICADO -->
+        <ng-container *ngIf="!authService.estaAutenticado()">
+            <li class="nav-item">
+                <a class="nav-link" routerLink="/login">Iniciar Sesión</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" routerLink="/register">Registrarse</a>
+            </li>
+        </ng-container>
+
+        <!-- VISIBLE CUANDO SÍ ESTÁ AUTENTICADO -->
+        <ng-container *ngIf="authService.estaAutenticado()">
+            <li class="nav-item d-flex align-items-center">
+                <span class="navbar-text text-light me-3">
+                    Bienvenido, <strong>{{ getUsuario() }}</strong>
+                </span>
+            </li>
+            <li class="nav-item">
+                <button class="btn btn-danger btn-sm" (click)="logout()">Cerrar Sesión</button>
+            </li>
+        </ng-container>
+
       </ul>
     </div>
   </div>

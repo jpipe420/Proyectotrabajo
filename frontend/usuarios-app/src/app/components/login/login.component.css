@@ -1,23 +1,53 @@
+/* Centra el contenedor principal */
+.login-container {
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Estilo para la tarjeta (card) del formulario */
 .card {
-  border: none;
-  margin-top: 50px;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-.card-header {
-  border-radius: 5px 5px 0 0;
+/* Título */
+.card-title {
+    color: #007bff; /* Color primario de Bootstrap */
+    font-weight: 600;
 }
 
-.form-group label {
-  font-weight: 500;
-  color: #333;
-}
-
+/* Botón principal */
 .btn-primary {
-  padding: 10px;
-  font-weight: 500;
+    background-color: #007bff;
+    border-color: #007bff;
+    transition: background-color 0.2s;
 }
 
-.btn-primary:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
+.btn-primary:hover:not([disabled]) {
+    background-color: #0056b3;
+    border-color: #0056b3;
+}
+
+/* Campo de formulario */
+.form-control:focus {
+    border-color: #80bdff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+/* Mensaje de error */
+.alert-danger {
+    margin-top: 15px;
+    padding: 10px;
+}
+
+/* Texto de registro */
+.text-center a {
+    color: #28a745; /* Color secundario para el enlace de registro */
+    text-decoration: none;
+}
+.text-center a:hover {
+    text-decoration: underline;
 }
