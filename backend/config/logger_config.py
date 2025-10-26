@@ -177,7 +177,7 @@ def log_execution(logger: logging.Logger = None):
             _logger = logger or app_logger
             func_name = func.__name__
             
-            _logger.debug(f"⏩ Iniciando ejecución: {func_name}")
+            _logger.debug(f" Iniciando ejecución: {func_name}")
             start_time = time.time()
             
             try:
