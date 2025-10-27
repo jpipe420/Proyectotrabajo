@@ -9,7 +9,7 @@ import {
 } from '../../models/excel-analysis.model';
 import { Usuario } from '../../models/usuario.model';
 import { EstadisticasUsuarios } from '../../models/estadisticas.model';
-import { ChartConfiguration, ChartData, ChartType } from 'chart.js';
+import { ChartConfiguration } from 'chart.js';
 import { BaseChartDirective } from 'ng2-charts';
 
 @Component({
@@ -33,73 +33,87 @@ export class UploadExcelComponent implements OnInit {
   selectedSheet: HojaAnalisis | null = null;
   editableData: RegistroExcel[] = [];
 
+  // Selección de hojas
+  hojasSeleccionadas: Set<string> = new Set();
+
   // Usuarios guardados
   usuarios: Usuario[] = [];
 
   // Estadísticas
   estadisticas: EstadisticasUsuarios | null = null;
 
-  // Configuración de gráficos
-  public barChartType: ChartType = 'bar';
-  public pieChartType: ChartType = 'pie';
-  public lineChartType: ChartType = 'line';
-
-  // Datos para gráfico de usuarios por mes
-  public barChartData: ChartData<'bar'> = {
-    labels: [],
-    datasets: [{
-      data: [],
-      label: 'Usuarios Registrados',
-      backgroundColor: 'rgba(79, 70, 229, 0.7)',
-      borderColor: 'rgba(79, 70, 229, 1)',
-      borderWidth: 1
-    }]
-  };
-
-  public barChartOptions: ChartConfiguration['options'] = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        display: true,
-        position: 'top'
-      }
-    },
-    scales: {
-      y: {
-        beginAtZero: true,
-        ticks: {
-          precision: 0
-        }
-      }
-    }
-  };
-
-  // Datos para gráfico de dominios
-  public pieChartData: ChartData<'pie'> = {
+  // Gráfico de pastel - Usuarios por hoja cargada
+  public pieChartData: ChartConfiguration<'pie'>['data'] = {
     labels: [],
     datasets: [{
       data: [],
       backgroundColor: [
-        'rgba(79, 70, 229, 0.7)',
-        'rgba(34, 197, 94, 0.7)',
-        'rgba(251, 146, 60, 0.7)',
-        'rgba(239, 68, 68, 0.7)',
-        'rgba(168, 85, 247, 0.7)',
-        'rgba(236, 72, 153, 0.7)',
-        'rgba(14, 165, 233, 0.7)',
-        'rgba(250, 204, 21, 0.7)'
-      ]
+        'rgba(79, 70, 229, 0.8)',
+        'rgba(34, 197, 94, 0.8)',
+        'rgba(251, 146, 60, 0.8)',
+        'rgba(239, 68, 68, 0.8)',
+        'rgba(168, 85, 247, 0.8)',
+        'rgba(236, 72, 153, 0.8)',
+        'rgba(14, 165, 233, 0.8)',
+        'rgba(250, 204, 21, 0.8)'
+      ],
+      borderColor: [
+        'rgba(79, 70, 229, 1)',
+        'rgba(34, 197, 94, 1)',
+        'rgba(251, 146, 60, 1)',
+        'rgba(239, 68, 68, 1)',
+        'rgba(168, 85, 247, 1)',
+        'rgba(236, 72, 153, 1)',
+        'rgba(14, 165, 233, 1)',
+        'rgba(250, 204, 21, 1)'
+      ],
+      borderWidth: 2
     }]
   };
 
-  public pieChartOptions: ChartConfiguration['options'] = {
+  public pieChartOptions: ChartConfiguration<'pie'>['options'] = {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
       legend: {
         display: true,
-        position: 'right'
+        position: 'right',
+        labels: {
+          font: {
+            size: 12
+          },
+          padding: 15,
+          generateLabels: (chart) => {
+            const data = chart.data;
+            if (data.labels && data.datasets.length) {
+              return data.labels.map((label, i) => {
+                const dataset = data.datasets[0];
+                const value = dataset.data[i] as number;
+                const total = (dataset.data as number[]).reduce((a, b) => a + b, 0);
+                const percentage = ((value / total) * 100).toFixed(1);
+                
+                return {
+                  text: `${label}: ${value} (${percentage}%)`,
+                  fillStyle: (dataset.backgroundColor as string[])[i],
+                  hidden: false,
+                  index: i
+                };
+              });
+            }
+            return [];
+          }
+        }
+      },
+      tooltip: {
+        callbacks: {
+          label: (context) => {
+            const label = context.label || '';
+            const value = context.parsed;
+            const total = (context.dataset.data as number[]).reduce((a, b) => a + b, 0);
+            const percentage = ((value / total) * 100).toFixed(1);
+            return `${label}: ${value} usuarios (${percentage}%)`;
+          }
+        }
       }
     }
   };
@@ -122,7 +136,6 @@ export class UploadExcelComponent implements OnInit {
   onFileSelected(event: any): void {
     const file = event.target.files[0];
     if (file) {
-      // Validar extensión
       const allowedExtensions = ['xlsx', 'xls'];
       const fileExtension = file.name.split('.').pop()?.toLowerCase();
 
@@ -158,9 +171,15 @@ export class UploadExcelComponent implements OnInit {
           this.analysisData = response.data;
 
           if (this.analysisData.hojas_validas.length > 0) {
-            // Seleccionar primera hoja válida
             this.selectSheet(this.analysisData.hojas_validas[0]);
             this.currentStep = 2;
+            
+            // Seleccionar todas las hojas válidas por defecto
+            this.hojasSeleccionadas.clear();
+            this.analysisData.hojas_validas.forEach(hoja => {
+              this.hojasSeleccionadas.add(hoja.nombre_hoja);
+            });
+            
             this.alertService.success('Análisis completado', response.message);
           } else {
             this.alertService.error(
@@ -206,14 +225,28 @@ export class UploadExcelComponent implements OnInit {
 
   selectSheet(hoja: HojaAnalisis): void {
     this.selectedSheet = hoja;
-    // Clonar datos para edición
     this.editableData = JSON.parse(JSON.stringify(hoja.datos));
     
-    // Marcar registros válidos como seleccionados por defecto
     this.editableData.forEach(registro => {
       registro.selected = registro.estado_validacion === 'valido';
       registro.editing = false;
     });
+  }
+
+  toggleHojaSelection(nombreHoja: string): void {
+    if (this.hojasSeleccionadas.has(nombreHoja)) {
+      this.hojasSeleccionadas.delete(nombreHoja);
+    } else {
+      this.hojasSeleccionadas.add(nombreHoja);
+    }
+  }
+
+  isHojaSelected(nombreHoja: string): boolean {
+    return this.hojasSeleccionadas.has(nombreHoja);
+  }
+
+  getHojasSeleccionadasCount(): number {
+    return this.hojasSeleccionadas.size;
   }
 
   toggleRowSelection(index: number): void {
@@ -233,7 +266,6 @@ export class UploadExcelComponent implements OnInit {
 
   saveEdit(index: number): void {
     this.editableData[index].editing = false;
-    // Validar datos editados
     const registro = this.editableData[index];
     
     if (!registro.nombre || !registro.username || !registro.correo || !registro.user_passw) {
@@ -258,7 +290,6 @@ export class UploadExcelComponent implements OnInit {
   }
 
   cancelEdit(index: number): void {
-    // Restaurar valores originales
     if (this.selectedSheet) {
       this.editableData[index] = JSON.parse(
         JSON.stringify(this.selectedSheet.datos[index])
@@ -271,21 +302,38 @@ export class UploadExcelComponent implements OnInit {
   }
 
   confirmUpload(): void {
-    const selectedRecords = this.editableData.filter(r => r.selected);
+    if (!this.analysisData) return;
 
-    if (selectedRecords.length === 0) {
-      this.alertService.warning('Debes seleccionar al menos un registro');
+    if (this.hojasSeleccionadas.size === 0) {
+      this.alertService.warning('Debes seleccionar al menos una hoja para cargar');
       return;
     }
 
+    // Recopilar todos los registros seleccionados de todas las hojas seleccionadas
+    const todosLosRegistrosSeleccionados: any[] = [];
+    
+    this.analysisData.hojas_validas.forEach(hoja => {
+      if (this.hojasSeleccionadas.has(hoja.nombre_hoja)) {
+        const registrosDeEstaHoja = hoja.datos.filter(r => r.estado_validacion === 'valido');
+        todosLosRegistrosSeleccionados.push(...registrosDeEstaHoja);
+      }
+    });
+
+    if (todosLosRegistrosSeleccionados.length === 0) {
+      this.alertService.warning('No hay registros válidos para cargar en las hojas seleccionadas');
+      return;
+    }
+
+    const hojasNombres = Array.from(this.hojasSeleccionadas).join(', ');
+
     this.alertService.confirm(
       '¿Confirmar carga?',
-      `Se guardarán ${selectedRecords.length} usuario(s) en la base de datos`,
-      'Sí, guardar',
+      `Se cargarán ${todosLosRegistrosSeleccionados.length} usuario(s) de ${this.hojasSeleccionadas.size} hoja(s): ${hojasNombres}`,
+      'Sí, cargar todo',
       'Cancelar'
     ).then((result) => {
       if (result.isConfirmed) {
-        this.saveToDatabase(selectedRecords);
+        this.saveToDatabase(todosLosRegistrosSeleccionados);
       }
     });
   }
@@ -309,17 +357,15 @@ export class UploadExcelComponent implements OnInit {
         if (response.status === 'success' && response.data) {
           this.alertService.success(
             '¡Carga exitosa!',
-            `Se guardaron ${response.data.usuarios_creados} usuario(s)`
+            `Se guardaron ${response.data.usuarios_creados} usuario(s) de ${this.hojasSeleccionadas.size} hoja(s)`
           );
           
-          // Recargar datos
           this.loadUsuarios();
           this.loadEstadisticas();
+          this.updateChartWithLoadedSheets();
           
-          // Ir a vista de resultados
           this.currentStep = 3;
         } else if (response.status === 'warning' && response.data) {
-          // Carga con errores
           this.alertService.warning(
             'Carga parcial',
             response.message
@@ -333,6 +379,7 @@ export class UploadExcelComponent implements OnInit {
           
           this.loadUsuarios();
           this.loadEstadisticas();
+          this.updateChartWithLoadedSheets();
           this.currentStep = 3;
         }
       },
@@ -342,6 +389,32 @@ export class UploadExcelComponent implements OnInit {
         this.alertService.error('Error al guardar', error.message);
       }
     });
+  }
+
+  updateChartWithLoadedSheets(): void {
+    if (!this.analysisData) return;
+
+    const labels: string[] = [];
+    const data: number[] = [];
+
+    this.analysisData.hojas_validas.forEach(hoja => {
+      if (this.hojasSeleccionadas.has(hoja.nombre_hoja)) {
+        labels.push(hoja.nombre_hoja);
+        data.push(hoja.total_validos);
+      }
+    });
+
+    this.pieChartData = {
+      labels: labels,
+      datasets: [{
+        data: data,
+        backgroundColor: this.pieChartData.datasets[0].backgroundColor,
+        borderColor: this.pieChartData.datasets[0].borderColor,
+        borderWidth: 2
+      }]
+    };
+
+    this.chart?.update();
   }
 
   // ========================================
@@ -366,28 +439,12 @@ export class UploadExcelComponent implements OnInit {
       next: (response) => {
         if (response.status === 'success' && response.data) {
           this.estadisticas = response.data;
-          this.updateCharts();
         }
       },
       error: (error) => {
         console.error('Error cargando estadísticas:', error);
       }
     });
-  }
-
-  updateCharts(): void {
-    if (!this.estadisticas) return;
-
-    // Actualizar gráfico de barras (usuarios por mes)
-    this.barChartData.labels = this.estadisticas.usuarios_por_mes.map(m => m.mes_nombre);
-    this.barChartData.datasets[0].data = this.estadisticas.usuarios_por_mes.map(m => m.cantidad);
-
-    // Actualizar gráfico de pie (dominios)
-    this.pieChartData.labels = this.estadisticas.usuarios_por_dominio.map(d => d.dominio);
-    this.pieChartData.datasets[0].data = this.estadisticas.usuarios_por_dominio.map(d => d.cantidad);
-
-    // Actualizar gráficos
-    this.chart?.update();
   }
 
   deleteUsuario(id: number): void {
@@ -412,10 +469,6 @@ export class UploadExcelComponent implements OnInit {
     });
   }
 
-  // ========================================
-  // UTILIDADES
-  // ========================================
-
   resetUploader(): void {
     this.currentStep = 1;
     this.selectedFile = null;
@@ -423,6 +476,7 @@ export class UploadExcelComponent implements OnInit {
     this.analysisData = null;
     this.selectedSheet = null;
     this.editableData = [];
+    this.hojasSeleccionadas.clear();
   }
 
   goToStep(step: number): void {
@@ -434,6 +488,8 @@ export class UploadExcelComponent implements OnInit {
       case 'valido':
         return 'badge bg-success';
       case 'duplicado_bd':
+      case 'duplicado_excel':
+      case 'correo_duplicado':
         return 'badge bg-warning';
       default:
         return 'badge bg-danger';
@@ -445,7 +501,11 @@ export class UploadExcelComponent implements OnInit {
       case 'valido':
         return 'Válido';
       case 'duplicado_bd':
-        return 'Duplicado';
+        return 'Duplicado en BD';
+      case 'duplicado_excel':
+        return 'Duplicado en Excel';
+      case 'correo_duplicado':
+        return 'Correo duplicado';
       default:
         return 'Error';
     }

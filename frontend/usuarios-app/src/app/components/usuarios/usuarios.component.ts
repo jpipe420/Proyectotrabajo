@@ -49,6 +49,15 @@ export class UsuariosComponent implements OnInit {
     this.usuarioService.getUsuarios().subscribe({
       next: (response) => {
         this.loading = false;
+        
+        // 🔍 DEBUG: Ver qué datos llegan del backend
+        console.log('📊 Respuesta completa del backend:', response);
+        console.log('👥 Usuarios recibidos:', response.data);
+        if (response.data && response.data.length > 0) {
+          console.log('🔍 Primer usuario (ejemplo):', response.data[0]);
+          console.log('📅 Campo created_at del primer usuario:', response.data[0].created_at);
+        }
+        
         if (response.status === 'success' && response.data) {
           this.usuarios = response.data;
           this.usuariosFiltrados = [...this.usuarios];
@@ -57,6 +66,7 @@ export class UsuariosComponent implements OnInit {
       },
       error: (error) => {
         this.loading = false;
+        console.error('❌ Error al cargar usuarios:', error);
         this.alertService.error('Error al cargar usuarios', error.message);
       }
     });

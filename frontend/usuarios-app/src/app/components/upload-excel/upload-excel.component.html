@@ -130,48 +130,76 @@
       </div>
     </div>
 
-    <!-- Tabs de hojas -->
+    <!-- Tabs de hojas CON CHECKBOX DE SELECCIÓN -->
     <div class="card shadow mb-4">
-      <div class="card-header">
-        <ul class="nav nav-tabs card-header-tabs">
-          <li class="nav-item" *ngFor="let hoja of analysisData.hojas_validas">
-            <a class="nav-link" 
-               [class.active]="selectedSheet === hoja"
-               (click)="selectSheet(hoja)">
-              {{ hoja.nombre_hoja }} 
-              <span class="badge bg-primary ms-2">{{ hoja.total_filas }}</span>
-            </a>
-          </li>
-        </ul>
+      <div class="card-header bg-primary text-white">
+        <div class="d-flex justify-content-between align-items-center">
+          <h5 class="mb-0">
+            <i class="bi bi-list-check"></i> Selecciona las hojas a cargar
+          </h5>
+          <span class="badge bg-light text-primary">
+            {{ getHojasSeleccionadasCount() }} de {{ analysisData.hojas_validas.length }} seleccionadas
+          </span>
+        </div>
       </div>
 
       <div class="card-body">
-        <div *ngIf="selectedSheet">
-          
-          <!-- Información de la hoja -->
-          <div class="d-flex justify-content-between align-items-center mb-3">
-            <div>
-              <h5>{{ selectedSheet.nombre_hoja }}</h5>
-              <p class="text-muted mb-0">
-                {{ getSelectedCount() }} de {{ editableData.length }} registros seleccionados
-              </p>
-            </div>
-            <div>
-              <button class="btn btn-sm btn-outline-primary me-2" (click)="toggleAllRows()">
-                <i class="bi bi-check-square"></i> Seleccionar Todos
-              </button>
-              <button class="btn btn-sm btn-success" 
-                      [disabled]="getSelectedCount() === 0"
-                      (click)="confirmUpload()">
-                <i class="bi bi-save"></i> Confirmar Carga ({{ getSelectedCount() }})
-              </button>
+        <div class="row">
+          <div class="col-md-12 mb-3">
+            <div class="alert alert-info">
+              <i class="bi bi-info-circle"></i>
+              <strong>Tip:</strong> Selecciona las hojas que deseas cargar. Puedes cargar una o todas a la vez.
             </div>
           </div>
+        </div>
 
-          <!-- Tabla editable -->
-          <div class="table-responsive">
-            <table class="table table-hover table-bordered">
-              <thead class="table-light">
+        <!-- Lista de hojas con checkbox -->
+        <div class="row">
+          <div class="col-md-12">
+            <div class="list-group">
+              <label 
+                *ngFor="let hoja of analysisData.hojas_validas; let i = index"
+                class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+                [class.active]="isHojaSelected(hoja.nombre_hoja)"
+                style="cursor: pointer;">
+                <div class="form-check">
+                  <input 
+                    class="form-check-input" 
+                    type="checkbox" 
+                    [checked]="isHojaSelected(hoja.nombre_hoja)"
+                    (change)="toggleHojaSelection(hoja.nombre_hoja)"
+                    [id]="'hoja-' + i">
+                  <label class="form-check-label ms-2" [for]="'hoja-' + i">
+                    <strong>{{ hoja.nombre_hoja }}</strong>
+                    <small class="d-block text-muted">
+                      {{ hoja.total_filas }} filas | {{ hoja.total_validos }} válidos | {{ hoja.total_duplicados }} duplicados
+                    </small>
+                  </label>
+                </div>
+                <div>
+                  <button 
+                    class="btn btn-sm btn-outline-primary me-2"
+                    (click)="selectSheet(hoja); $event.stopPropagation()">
+                    <i class="bi bi-eye"></i> Ver
+                  </button>
+                  <span class="badge" [class.bg-success]="hoja.total_validos > 0" [class.bg-secondary]="hoja.total_validos === 0">
+                    {{ hoja.total_validos }} válidos
+                  </span>
+                </div>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Vista previa de la hoja seleccionada -->
+        <div *ngIf="selectedSheet" class="mt-4">
+          <h6 class="border-bottom pb-2">
+            <i class="bi bi-table"></i> Vista previa: {{ selectedSheet.nombre_hoja }}
+          </h6>
+
+          <div class="table-responsive" style="max-height: 400px;">
+            <table class="table table-sm table-bordered">
+              <thead class="table-light" style="position: sticky; top: 0; z-index: 10;">
                 <tr>
                   <th width="50">
                     <input type="checkbox" 
@@ -189,13 +217,14 @@
               </thead>
               <tbody>
                 <tr *ngFor="let registro of editableData; let i = index"
-                    [class.table-success]="registro.selected && registro.estado_validacion === 'valido'"
-                    [class.table-warning]="registro.estado_validacion === 'duplicado_bd'">
+                    [class.table-danger]="registro.estado_validacion === 'duplicado_bd'"
+                    [class.table-warning]="registro.estado_validacion === 'error'">
                   
                   <!-- Checkbox -->
                   <td>
-                    <input type="checkbox" 
-                           [(ngModel)]="registro.selected"
+                    <input type="checkbox"
+                           [checked]="registro.selected"
+                           (change)="toggleRowSelection(i)"
                            [disabled]="registro.estado_validacion === 'duplicado_bd'">
                   </td>
 
@@ -273,18 +302,20 @@
 
         </div>
       </div>
-    </div>
 
-    <!-- Botones de navegación -->
-    <div class="d-flex justify-content-between">
-      <button class="btn btn-secondary" (click)="resetUploader()">
-        <i class="bi bi-arrow-left"></i> Nuevo Archivo
-      </button>
-      <button class="btn btn-success" 
-              [disabled]="getSelectedCount() === 0"
-              (click)="confirmUpload()">
-        <i class="bi bi-save"></i> Confirmar Carga ({{ getSelectedCount() }})
-      </button>
+      <!-- Botones de navegación -->
+      <div class="card-body">
+        <div class="d-flex justify-content-between">
+          <button class="btn btn-secondary" (click)="resetUploader()">
+            <i class="bi bi-arrow-left"></i> Nuevo Archivo
+          </button>
+          <button class="btn btn-success" 
+                  [disabled]="getSelectedCount() === 0"
+                  (click)="confirmUpload()">
+            <i class="bi bi-save"></i> Confirmar Carga ({{ getSelectedCount() }})
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -329,31 +360,19 @@
       </div>
     </div>
 
-    <!-- Gráficos -->
-    <div class="row mb-4">
-      <div class="col-md-8">
-        <div class="card shadow">
-          <div class="card-header bg-primary text-white">
-            <h5 class="mb-0"><i class="bi bi-bar-chart"></i> Usuarios Registrados por Mes</h5>
-          </div>
-          <div class="card-body" style="height: 350px;">
-            <canvas baseChart
-                    [data]="barChartData"
-                    [type]="barChartType"
-                    [options]="barChartOptions">
-            </canvas>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-4">
+    <!-- Gráfico de pastel - Usuarios cargados por hoja -->
+    <div class="row mb-4" *ngIf="pieChartData.labels && pieChartData.labels.length > 0">
+      <div class="col-md-12">
         <div class="card shadow">
           <div class="card-header bg-success text-white">
-            <h5 class="mb-0"><i class="bi bi-pie-chart"></i> Usuarios por Dominio</h5>
+            <h5 class="mb-0">
+              <i class="bi bi-pie-chart"></i> Distribución de Usuarios por Hoja Cargada
+            </h5>
           </div>
-          <div class="card-body" style="height: 350px;">
+          <div class="card-body" style="height: 400px;">
             <canvas baseChart
                     [data]="pieChartData"
-                    [type]="pieChartType"
+                    type="pie"
                     [options]="pieChartOptions">
             </canvas>
           </div>
