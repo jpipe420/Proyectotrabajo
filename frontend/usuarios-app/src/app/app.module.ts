@@ -3,6 +3,7 @@ import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { HttpClientModule } from '@angular/common/http';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { NavbarComponent } from './components/navbar/navbar.component';
 
 // Chart.js
 import { NgChartsModule } from 'ng2-charts';
@@ -21,7 +22,8 @@ import { UploadExcelComponent } from './components/upload-excel/upload-excel.com
     AppComponent,
     LoginComponent,
     UsuariosComponent,
-    UploadExcelComponent
+    UploadExcelComponent,
+    NavbarComponent
   ],
   imports: [
     BrowserModule,

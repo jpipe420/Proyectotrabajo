@@ -1,22 +1,39 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { AuthService } from '../../services/auth.service';
+import { AlertService } from '../../services/alert.service';
 
 @Component({
   selector: 'app-navbar',
   templateUrl: './navbar.component.html',
   styleUrls: ['./navbar.component.css']
 })
-export class NavbarComponent {
-  constructor(private authService: AuthService, private router: Router) { }
+export class NavbarComponent implements OnInit {
+  currentUser: string = '';
+  isLoggedIn: boolean = false;
 
-  logout(): void {
-    this.authService.logout();
-    this.router.navigate(['/login']);
+  constructor(
+    private router: Router,
+    private alertService: AlertService
+  ) {}
+
+  ngOnInit(): void {
+    this.currentUser = localStorage.getItem('currentUser') || 'Usuario';
+    this.isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
   }
 
-  getUsuario(): string {
-    const usuario = this.authService.getUsuario();
-    return usuario.username || 'Usuario';
+  logout(): void {
+    this.alertService.confirm(
+      '¿Cerrar sesión?',
+      '¿Estás seguro de que deseas salir?',
+      'Sí, salir',
+      'Cancelar'
+    ).then((result) => {
+      if (result.isConfirmed) {
+        localStorage.removeItem('currentUser');
+        localStorage.removeItem('isLoggedIn');
+        this.alertService.success('Sesión cerrada', 'Hasta pronto');
+        this.router.navigate(['/login']);
+      }
+    });
   }
 }
