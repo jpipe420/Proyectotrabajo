@@ -33,6 +33,6 @@ export class AuthService {
   }
 
   estaAutenticado(): boolean {
-    return this.isLoggedIn;
+    return !!localStorage.getItem('usuario');
   }
 }

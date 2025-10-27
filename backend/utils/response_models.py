@@ -17,7 +17,7 @@ class StatusEnum(str, Enum):
 
 class ResponseMetadata(BaseModel):
     """Metadata adicional para las respuestas"""
-    timestamp: datetime = Field(default_factory=datetime.now)
+    timestamp: str = Field(default_factory=lambda: datetime.now().isoformat())
     version: str = "1.0.0"
     request_id: Optional[str] = None
     execution_time_ms: Optional[float] = None

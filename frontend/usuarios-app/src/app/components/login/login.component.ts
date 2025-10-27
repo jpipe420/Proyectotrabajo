@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
-import { AuthService } from '../../services/auth.service';
+import { UsuarioService } from '../../services/usuario.service';
+import { AlertService } from '../../services/alert.service';
 
 @Component({
   selector: 'app-login',
@@ -8,38 +9,63 @@ import { AuthService } from '../../services/auth.service';
   styleUrls: ['./login.component.css']
 })
 export class LoginComponent {
-  username = '';
-  user_passw = '';
-  error = '';
-  loading = false;
+  username: string = '';
+  password: string = '';
+  loading: boolean = false;
+  errorMessage: string = '';
 
-  constructor(private authService: AuthService, private router: Router) { }
+  constructor(
+    private usuarioService: UsuarioService,
+    private alertService: AlertService,
+    private router: Router
+  ) {}
 
-  login(): void {
-    this.error = '';
-    this.loading = true;
-
-    if (!this.username || !this.user_passw) {
-      this.error = 'Por favor completa todos los campos';
-      this.loading = false;
+  onLogin(): void {
+    // Validaciones básicas
+    if (!this.username || !this.password) {
+      this.errorMessage = 'Por favor ingrese usuario y contraseña';
       return;
     }
 
-    this.authService.login(this.username, this.user_passw).subscribe(
-      (response) => {
-        if (response === 'Succes') {
-          this.authService.setUsuario({ username: this.username });
-          this.router.navigate(['/usuarios']);
+    this.loading = true;
+    this.errorMessage = '';
+
+    this.usuarioService.login(this.username, this.password).subscribe({
+      next: (response) => {
+        this.loading = false;
+        
+        // Verificar el status de la respuesta
+        if (response.status === 'success') {
+          // Guardar datos del usuario en localStorage
+          localStorage.setItem('currentUser', this.username);
+          localStorage.setItem('isLoggedIn', 'true');
+          
+          // Mostrar alerta de éxito
+          this.alertService.success('¡Bienvenido!', `Login exitoso como ${this.username}`);
+          
+          // Redirigir al dashboard o usuarios
+          setTimeout(() => {
+            this.router.navigate(['/upload-excel']);
+          }, 1000);
         } else {
-          this.error = 'Usuario o contraseña incorrectos';
+          this.errorMessage = response.message || 'Error en el login';
         }
-        this.loading = false;
       },
-      (error) => {
-        this.error = 'Error en la conexión con el servidor';
-        console.error(error);
+      error: (error) => {
         this.loading = false;
+        console.error('Error en login:', error);
+        
+        // Manejar diferentes tipos de error
+        if (error.message) {
+          this.errorMessage = error.message;
+        } else if (error.error?.message) {
+          this.errorMessage = error.error.message;
+        } else {
+          this.errorMessage = 'Usuario o contraseña incorrectos';
+        }
+        
+        this.alertService.error('Error de autenticación', this.errorMessage);
       }
-    );
+    });
   }
 }

@@ -33,7 +33,7 @@ user = APIRouter()
 
 
 @user.get("/")
-def root():
+def root_users():
     api_logger.info("Acceso al endpoint raíz del router")
     return success_response(
         message="Router de usuarios funcionando",

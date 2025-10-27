@@ -1,105 +1,418 @@
-<div class="upload-container">
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <h4 class="mb-0">Carga Masiva de Usuarios</h4>
-    <button type="button" class="btn-close" (click)="cancelar()"></button>
-  </div>
-
-  <div *ngIf="mensaje" [ngClass]="'alert alert-' + tipoMensaje + ' alert-dismissible fade show'" role="alert">
-    {{ mensaje }}
-    <button type="button" class="btn-close" (click)="mensaje = ''" aria-label="Close"></button>
-  </div>
-
-  <div class="info-section mb-4">
-    <div class="alert alert-info">
-      <strong>ℹ️ Instrucciones:</strong>
-      <ol class="mb-0 mt-2">
-        <li>Descarga la plantilla de Excel</li>
-        <li>Completa los datos de los usuarios (nombre, username, correo, user_passw)</li>
-        <li>Guarda el archivo y súbelo aquí</li>
-      </ol>
-    </div>
-  </div>
-
-  <div class="download-section mb-4">
-    <button class="btn btn-secondary w-100" (click)="descargarPlantilla()">
-      📥 Descargar Plantilla Excel
-    </button>
-  </div>
-
-  <hr class="my-4">
-
-  <div class="upload-section">
-    <div class="mb-3">
-      <label for="archivo" class="form-label fw-bold">Selecciona el archivo Excel:</label>
-      <input 
-        type="file" 
-        class="form-control" 
-        id="archivo"
-        accept=".xlsx,.xls"
-        (change)="onFileSelected($event)">
-      <small class="text-muted">Formatos permitidos: .xlsx, .xls</small>
-    </div>
-
-    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-      <button 
-        type="button" 
-        class="btn btn-secondary" 
-        (click)="cancelar()">
-        Cancelar
-      </button>
-      <button 
-        type="button"
-        class="btn btn-primary" 
-        (click)="subirArchivo()"
-        [disabled]="loading || !selectedFile">
-        <span *ngIf="loading" class="spinner-border spinner-border-sm me-2"></span>
-        {{ loading ? 'Subiendo...' : 'Subir Archivo' }}
-      </button>
-    </div>
-  </div>
-
-  <div *ngIf="resultado" class="result-section mt-4">
-    <div class="card">
-      <div class="card-header bg-success text-white">
-        <h5 class="mb-0">✅ Resumen de Carga</h5>
-      </div>
-      <div class="card-body">
-        <div class="row text-center mb-3">
-          <div class="col-md-4">
-            <div class="stat-box success">
-              <h3 class="text-success">{{ resultado.usuarios_creados }}</h3>
-              <p class="mb-0">Usuarios Creados</p>
-            </div>
-          </div>
-          <div class="col-md-4">
-            <div class="stat-box warning">
-              <h3 class="text-warning">{{ resultado.usuarios_duplicados }}</h3>
-              <p class="mb-0">Duplicados</p>
-            </div>
-          </div>
-          <div class="col-md-4">
-            <div class="stat-box info">
-              <h3 class="text-primary">{{ resultado.total_filas_procesadas }}</h3>
-              <p class="mb-0">Total Procesados</p>
-            </div>
-          </div>
-        </div>
-
-        <div *ngIf="resultado.errores && resultado.errores.length > 0" class="mt-3">
-          <h6 class="text-danger">⚠️ Errores encontrados:</h6>
-          <ul class="list-group">
-            <li class="list-group-item list-group-item-danger" *ngFor="let error of resultado.errores">
-              {{ error }}
+<div class="container-fluid py-4">
+  
+  <!-- Navegación de pasos -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <ul class="nav nav-pills nav-justified">
+            <li class="nav-item">
+              <a class="nav-link" [class.active]="currentStep === 1" (click)="goToStep(1)">
+                <i class="bi bi-upload"></i> 1. Subir Excel
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" [class.active]="currentStep === 2" [class.disabled]="!analysisData">
+                <i class="bi bi-table"></i> 2. Vista Previa
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" [class.active]="currentStep === 3" (click)="currentStep === 3 && goToStep(3)">
+                <i class="bi bi-bar-chart"></i> 3. Resultados
+              </a>
             </li>
           </ul>
         </div>
+      </div>
+    </div>
+  </div>
 
-        <div class="mt-3 text-end">
-          <button class="btn btn-success" (click)="finalizar()">
-            Finalizar y Actualizar Lista
-          </button>
+  <!-- ============================================ -->
+  <!-- PASO 1: SUBIR ARCHIVO -->
+  <!-- ============================================ -->
+  <div *ngIf="currentStep === 1" class="animate__animated animate__fadeIn">
+    <div class="row justify-content-center">
+      <div class="col-lg-8">
+        <div class="card shadow">
+          <div class="card-header bg-primary text-white">
+            <h4 class="mb-0"><i class="bi bi-file-earmark-excel"></i> Carga Masiva de Usuarios</h4>
+          </div>
+          <div class="card-body p-4">
+            
+            <!-- Zona de drop -->
+            <div class="upload-zone border-3 border-dashed rounded p-5 text-center mb-4"
+                 [class.border-primary]="!selectedFile"
+                 [class.border-success]="selectedFile">
+              <input type="file" 
+                     id="fileInput" 
+                     class="d-none" 
+                     accept=".xlsx,.xls"
+                     (change)="onFileSelected($event)">
+              <label for="fileInput" class="d-block cursor-pointer">
+                <i class="bi bi-cloud-upload display-1 text-primary mb-3"></i>
+                <h5 *ngIf="!selectedFile">Haz clic para seleccionar un archivo</h5>
+                <h5 *ngIf="selectedFile" class="text-success">
+                  <i class="bi bi-check-circle"></i> {{ fileName }}
+                </h5>
+                <p class="text-muted mb-0">Formatos permitidos: .xlsx, .xls</p>
+              </label>
+            </div>
+
+            <!-- Botones de acción -->
+            <div class="d-grid gap-2">
+              <button class="btn btn-primary btn-lg" 
+                      [disabled]="!selectedFile || loading"
+                      (click)="uploadExcel()">
+                <i class="bi bi-upload"></i> Analizar Excel
+              </button>
+              <button class="btn btn-outline-secondary" 
+                      (click)="downloadTemplate()">
+                <i class="bi bi-download"></i> Descargar Plantilla de Ejemplo
+              </button>
+            </div>
+
+            <!-- Información -->
+            <div class="alert alert-info mt-4">
+              <h6 class="alert-heading"><i class="bi bi-info-circle"></i> Requisitos del archivo:</h6>
+              <ul class="mb-0">
+                <li>Columnas requeridas: <strong>nombre, username, correo, user_passw</strong></li>
+                <li>Puede contener múltiples hojas</li>
+                <li>Username: mínimo 3 caracteres</li>
+                <li>Contraseña: mínimo 6 caracteres</li>
+              </ul>
+            </div>
+
+          </div>
         </div>
       </div>
     </div>
+  </div>
+
+  <!-- ============================================ -->
+  <!-- PASO 2: VISTA PREVIA Y EDICIÓN -->
+  <!-- ============================================ -->
+  <div *ngIf="currentStep === 2 && analysisData" class="animate__animated animate__fadeIn">
+    
+    <!-- Resumen -->
+    <div class="row mb-4">
+      <div class="col-md-3">
+        <div class="card bg-primary text-white">
+          <div class="card-body">
+            <h6>Total Hojas</h6>
+            <h3>{{ analysisData.total_hojas }}</h3>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card bg-success text-white">
+          <div class="card-body">
+            <h6>Hojas Válidas</h6>
+            <h3>{{ analysisData.resumen.hojas_procesables }}</h3>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card bg-info text-white">
+          <div class="card-body">
+            <h6>Registros Válidos</h6>
+            <h3>{{ analysisData.resumen.total_registros_validos }}</h3>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card bg-warning text-white">
+          <div class="card-body">
+            <h6>Duplicados</h6>
+            <h3>{{ analysisData.resumen.total_registros_duplicados }}</h3>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabs de hojas -->
+    <div class="card shadow mb-4">
+      <div class="card-header">
+        <ul class="nav nav-tabs card-header-tabs">
+          <li class="nav-item" *ngFor="let hoja of analysisData.hojas_validas">
+            <a class="nav-link" 
+               [class.active]="selectedSheet === hoja"
+               (click)="selectSheet(hoja)">
+              {{ hoja.nombre_hoja }} 
+              <span class="badge bg-primary ms-2">{{ hoja.total_filas }}</span>
+            </a>
+          </li>
+        </ul>
+      </div>
+
+      <div class="card-body">
+        <div *ngIf="selectedSheet">
+          
+          <!-- Información de la hoja -->
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+              <h5>{{ selectedSheet.nombre_hoja }}</h5>
+              <p class="text-muted mb-0">
+                {{ getSelectedCount() }} de {{ editableData.length }} registros seleccionados
+              </p>
+            </div>
+            <div>
+              <button class="btn btn-sm btn-outline-primary me-2" (click)="toggleAllRows()">
+                <i class="bi bi-check-square"></i> Seleccionar Todos
+              </button>
+              <button class="btn btn-sm btn-success" 
+                      [disabled]="getSelectedCount() === 0"
+                      (click)="confirmUpload()">
+                <i class="bi bi-save"></i> Confirmar Carga ({{ getSelectedCount() }})
+              </button>
+            </div>
+          </div>
+
+          <!-- Tabla editable -->
+          <div class="table-responsive">
+            <table class="table table-hover table-bordered">
+              <thead class="table-light">
+                <tr>
+                  <th width="50">
+                    <input type="checkbox" 
+                           [checked]="getSelectedCount() === editableData.length"
+                           (change)="toggleAllRows()">
+                  </th>
+                  <th>Fila</th>
+                  <th>Nombre</th>
+                  <th>Username</th>
+                  <th>Correo</th>
+                  <th>Contraseña</th>
+                  <th>Estado</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let registro of editableData; let i = index"
+                    [class.table-success]="registro.selected && registro.estado_validacion === 'valido'"
+                    [class.table-warning]="registro.estado_validacion === 'duplicado_bd'">
+                  
+                  <!-- Checkbox -->
+                  <td>
+                    <input type="checkbox" 
+                           [(ngModel)]="registro.selected"
+                           [disabled]="registro.estado_validacion === 'duplicado_bd'">
+                  </td>
+
+                  <!-- Fila -->
+                  <td>{{ registro.fila_original }}</td>
+
+                  <!-- Nombre -->
+                  <td>
+                    <input *ngIf="registro.editing" 
+                           type="text" 
+                           class="form-control form-control-sm"
+                           [(ngModel)]="registro.nombre">
+                    <span *ngIf="!registro.editing">{{ registro.nombre }}</span>
+                  </td>
+
+                  <!-- Username -->
+                  <td>
+                    <input *ngIf="registro.editing" 
+                           type="text" 
+                           class="form-control form-control-sm"
+                           [(ngModel)]="registro.username">
+                    <span *ngIf="!registro.editing">{{ registro.username }}</span>
+                  </td>
+
+                  <!-- Correo -->
+                  <td>
+                    <input *ngIf="registro.editing" 
+                           type="email" 
+                           class="form-control form-control-sm"
+                           [(ngModel)]="registro.correo">
+                    <span *ngIf="!registro.editing">{{ registro.correo }}</span>
+                  </td>
+
+                  <!-- Contraseña -->
+                  <td>
+                    <input *ngIf="registro.editing" 
+                           type="text" 
+                           class="form-control form-control-sm"
+                           [(ngModel)]="registro.user_passw">
+                    <span *ngIf="!registro.editing">••••••••</span>
+                  </td>
+
+                  <!-- Estado -->
+                  <td>
+                    <span [class]="getStatusBadgeClass(registro.estado_validacion || '')">
+                      {{ getStatusText(registro.estado_validacion || '') }}
+                    </span>
+                    <small *ngIf="registro.mensaje_validacion" class="d-block text-danger">
+                      {{ registro.mensaje_validacion }}
+                    </small>
+                  </td>
+
+                  <!-- Acciones -->
+                  <td>
+                    <div class="btn-group btn-group-sm" *ngIf="!registro.editing">
+                      <button class="btn btn-outline-primary" 
+                              (click)="enableEdit(i)"
+                              [disabled]="registro.estado_validacion === 'duplicado_bd'">
+                        <i class="bi bi-pencil"></i>
+                      </button>
+                    </div>
+                    <div class="btn-group btn-group-sm" *ngIf="registro.editing">
+                      <button class="btn btn-success" (click)="saveEdit(i)">
+                        <i class="bi bi-check"></i>
+                      </button>
+                      <button class="btn btn-secondary" (click)="cancelEdit(i)">
+                        <i class="bi bi-x"></i>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Botones de navegación -->
+    <div class="d-flex justify-content-between">
+      <button class="btn btn-secondary" (click)="resetUploader()">
+        <i class="bi bi-arrow-left"></i> Nuevo Archivo
+      </button>
+      <button class="btn btn-success" 
+              [disabled]="getSelectedCount() === 0"
+              (click)="confirmUpload()">
+        <i class="bi bi-save"></i> Confirmar Carga ({{ getSelectedCount() }})
+      </button>
+    </div>
+  </div>
+
+  <!-- ============================================ -->
+  <!-- PASO 3: RESULTADOS Y ESTADÍSTICAS -->
+  <!-- ============================================ -->
+  <div *ngIf="currentStep === 3" class="animate__animated animate__fadeIn">
+    
+    <!-- Estadísticas resumidas -->
+    <div class="row mb-4" *ngIf="estadisticas">
+      <div class="col-md-3">
+        <div class="card bg-primary text-white">
+          <div class="card-body text-center">
+            <h6>Total Usuarios</h6>
+            <h2>{{ estadisticas.total_usuarios }}</h2>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card bg-success text-white">
+          <div class="card-body text-center">
+            <h6>Hoy</h6>
+            <h2>{{ estadisticas.resumen_temporal.hoy }}</h2>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card bg-info text-white">
+          <div class="card-body text-center">
+            <h6>Esta Semana</h6>
+            <h2>{{ estadisticas.resumen_temporal.esta_semana }}</h2>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card bg-warning text-white">
+          <div class="card-body text-center">
+            <h6>Este Mes</h6>
+            <h2>{{ estadisticas.resumen_temporal.este_mes }}</h2>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Gráficos -->
+    <div class="row mb-4">
+      <div class="col-md-8">
+        <div class="card shadow">
+          <div class="card-header bg-primary text-white">
+            <h5 class="mb-0"><i class="bi bi-bar-chart"></i> Usuarios Registrados por Mes</h5>
+          </div>
+          <div class="card-body" style="height: 350px;">
+            <canvas baseChart
+                    [data]="barChartData"
+                    [type]="barChartType"
+                    [options]="barChartOptions">
+            </canvas>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card shadow">
+          <div class="card-header bg-success text-white">
+            <h5 class="mb-0"><i class="bi bi-pie-chart"></i> Usuarios por Dominio</h5>
+          </div>
+          <div class="card-body" style="height: 350px;">
+            <canvas baseChart
+                    [data]="pieChartData"
+                    [type]="pieChartType"
+                    [options]="pieChartOptions">
+            </canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabla de usuarios -->
+    <div class="card shadow">
+      <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"><i class="bi bi-people"></i> Lista de Usuarios</h5>
+        <button class="btn btn-sm btn-light" (click)="resetUploader()">
+          <i class="bi bi-plus-circle"></i> Cargar Más Usuarios
+        </button>
+      </div>
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-hover">
+            <thead class="table-light">
+              <tr>
+                <th>ID</th>
+                <th>Nombre</th>
+                <th>Username</th>
+                <th>Correo</th>
+                <th>Fecha Registro</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let usuario of usuarios">
+                <td>{{ usuario.id }}</td>
+                <td>{{ usuario.nombre }}</td>
+                <td>{{ usuario.username }}</td>
+                <td>{{ usuario.correo }}</td>
+                <td>{{ usuario.created_at | date:'short' }}</td>
+                <td>
+                  <button class="btn btn-sm btn-danger" 
+                          (click)="deleteUsuario(usuario.id!)">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </td>
+              </tr>
+              <tr *ngIf="usuarios.length === 0">
+                <td colspan="6" class="text-center text-muted">
+                  No hay usuarios registrados
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<!-- Spinner de carga -->
+<div *ngIf="loading" class="loading-overlay">
+  <div class="spinner-border text-primary" role="status">
+    <span class="visually-hidden">Cargando...</span>
   </div>
 </div>

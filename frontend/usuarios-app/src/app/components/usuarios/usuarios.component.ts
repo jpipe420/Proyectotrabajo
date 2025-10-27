@@ -1,5 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { UsuarioService } from '../../services/usuario.service';
+import { AlertService } from '../../services/alert.service';
+import { Usuario } from '../../models/usuario.model';
 
 @Component({
   selector: 'app-usuarios',
@@ -7,14 +9,15 @@ import { UsuarioService } from '../../services/usuario.service';
   styleUrls: ['./usuarios.component.css']
 })
 export class UsuariosComponent implements OnInit {
-  usuarios: any[] = [];
-  loading = false;
-  error = '';
-  mostrarForm = false;
-  mostrarUpload = false;
-  usuarioEditar: any = null;
+  usuarios: Usuario[] = [];
+  loading: boolean = false;
+  usuarioEditar: Usuario | null = null;
+  mostrarFormulario: boolean = false;
 
-  constructor(private usuarioService: UsuarioService) { }
+  constructor(
+    private usuarioService: UsuarioService,
+    private alertService: AlertService
+  ) {}
 
   ngOnInit(): void {
     this.cargarUsuarios();
@@ -22,67 +25,58 @@ export class UsuariosComponent implements OnInit {
 
   cargarUsuarios(): void {
     this.loading = true;
-    this.error = '';
-    this.usuarioService.getUsuarios().subscribe(
-      (data) => {
-        this.usuarios = data;
+    this.usuarioService.getUsuarios().subscribe({
+      next: (response) => {
         this.loading = false;
+        if (response.status === 'success' && response.data) {
+          this.usuarios = response.data;
+        }
       },
-      (error) => {
-        this.error = 'Error al cargar los usuarios';
-        console.error(error);
+      error: (error) => {
         this.loading = false;
+        this.alertService.error('Error al cargar usuarios', error.message);
       }
-    );
+    });
   }
 
-  abrirFormulario(): void {
-    this.mostrarForm = true;
-    this.mostrarUpload = false;
+  editarUsuario(usuario: Usuario): void {
+    this.usuarioEditar = { ...usuario };
+    this.mostrarFormulario = true;
+  }
+
+  eliminarUsuario(id: number): void {
+    this.alertService.confirm(
+      '¿Eliminar usuario?',
+      'Esta acción no se puede deshacer',
+      'Sí, eliminar',
+      'Cancelar'
+    ).then((result) => {
+      if (result.isConfirmed) {
+        this.usuarioService.deleteUsuario(id).subscribe({
+          next: () => {
+            this.alertService.success('Usuario eliminado exitosamente');
+            this.cargarUsuarios();
+          },
+          error: (error) => {
+            this.alertService.error('Error al eliminar', error.message);
+          }
+        });
+      }
+    });
+  }
+
+  nuevoUsuario(): void {
     this.usuarioEditar = null;
+    this.mostrarFormulario = true;
   }
 
   cerrarFormulario(): void {
-    this.mostrarForm = false;
+    this.mostrarFormulario = false;
     this.usuarioEditar = null;
   }
 
-  abrirUploadExcel(): void {
-    this.mostrarUpload = true;
-    this.mostrarForm = false;
-  }
-
-  cerrarUploadExcel(): void {
-    this.mostrarUpload = false;
-  }
-
-  editar(usuario: any): void {
-    this.usuarioEditar = { ...usuario };
-    this.mostrarForm = true;
-    this.mostrarUpload = false;
-  }
-
-  eliminar(id: number): void {
-    if (confirm('¿Estás seguro de que deseas eliminar este usuario?')) {
-      this.usuarioService.eliminarUsuario(id).subscribe(
-        () => {
-          this.cargarUsuarios();
-        },
-        (error) => {
-          this.error = 'Error al eliminar el usuario';
-          console.error(error);
-        }
-      );
-    }
-  }
-
   usuarioGuardado(): void {
-    this.cargarUsuarios();
     this.cerrarFormulario();
-  }
-
-  usuariosSubidos(): void {
     this.cargarUsuarios();
-    this.cerrarUploadExcel();
   }
 }

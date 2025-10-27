@@ -1,17 +1,47 @@
-.container {
-  padding-bottom: 50px;
+/* Modal backdrop */
+.modal {
+  background-color: rgba(0, 0, 0, 0.5);
 }
 
-h2 {
-  color: #333;
-  font-weight: bold;
+.modal.show {
+  display: block !important;
 }
 
-.table-hover tbody tr:hover {
-  background-color: #f5f5f5;
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1040;
 }
 
-.btn-sm {
-  padding: 5px 10px;
-  font-size: 0.875rem;
+.modal-backdrop.show {
+  opacity: 1;
+}
+
+/* Tabla */
+.table tbody tr {
+  transition: all 0.2s ease;
+}
+
+.table tbody tr:hover {
+  background-color: #f8f9fa;
+  transform: scale(1.01);
+}
+
+/* Botones */
+.btn-group-sm > .btn {
+  padding: 0.25rem 0.5rem;
+}
+
+/* Cards */
+.card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
 }
